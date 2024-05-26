@@ -1,4 +1,5 @@
 
+
 data Alfajor = Alfajor {
 nombre :: String,
 dulzor :: Float,
@@ -60,3 +61,39 @@ mismoSabor :: [Relleno] -> Bool
 mismoSabor rellenos = all (== head rellenos) rellenos 
 
 -- PUNTO 2
+abaratarAlfajor :: Alfajor -> Alfajor 
+abaratarAlfajor unAlfajor = unAlfajor {
+peso = peso unAlfajor - 10, 
+dulzor = dulzor unAlfajor - 7}
+
+renombrarAlfajor :: String -> Alfajor -> Alfajor 
+renombrarAlfajor nombreNuevo unAlfajor = unAlfajor {
+nombre = nombreNuevo     
+}
+
+agregarCapa :: Relleno -> Alfajor -> Alfajor 
+agregarCapa unaCapa unAlfajor = unAlfajor {
+capasDeRelleno =  unaCapa : capasDeRelleno unAlfajor     
+}
+
+hacerPremium :: Alfajor -> Alfajor 
+hacerPremium unAlfajor 
+    | esPotable unAlfajor = unAlfajor {capasDeRelleno = head (capasDeRelleno unAlfajor) : capasDeRelleno unAlfajor, nombre = nombre unAlfajor ++ " premium"}
+    | otherwise = unAlfajor
+
+muyPremium :: Int -> Alfajor -> Alfajor
+muyPremium 0 unAlfajor = unAlfajor 
+muyPremium gradoDePremium unAlfajor = muyPremium (gradoDePremium - 1) (hacerPremium unAlfajor)
+
+
+jorgitito :: Alfajor -> Alfajor 
+jorgitito = renombrarAlfajor "jorgitito" . abaratarAlfajor 
+
+jorgelin :: Alfajor -> Alfajor 
+jorgelin  = renombrarAlfajor "jorgelin" . agregarCapa DulceDeLeche 
+
+capitanCosta :: Alfajor -> Alfajor 
+capitanCosta = renombrarAlfajor "capitan del espacio de costa a costa".muyPremium 4.abaratarAlfajor 
+
+
+-- PUNTO 3 
