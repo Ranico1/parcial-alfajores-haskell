@@ -1,3 +1,5 @@
+import Data.List (isInfixOf)
+
 
 
 data Alfajor = Alfajor {
@@ -17,23 +19,27 @@ data Relleno = Mousse |  DulceDeLeche |  Fruta deriving (Show, Eq)
 -- ====================== PUNTO 1 A
 jorgito = Alfajor{
 nombre = "Jorgito",
-capasDeRelleno = [DulceDeLeche],
+dulzor = 8,
 peso = 80,
-dulzor = 8
+capasDeRelleno = [DulceDeLeche]
 }
 
 havanna = Alfajor {
 nombre = "Havanna",    
-capasDeRelleno = [Mousse, Mousse],
+dulzor = 12,
 peso = 60,
-dulzor = 12
+capasDeRelleno = [Mousse, Mousse]
+
+
 }
 
 capitanDelEspacio = Alfajor{
 nombre = "Capitan del espacio",
-capasDeRelleno = [DulceDeLeche],
+dulzor = 12,
 peso = 40,
-dulzor = 12
+capasDeRelleno = [DulceDeLeche]
+
+
 }
 
 -- ========================= PUNTO 1 B 
@@ -97,3 +103,82 @@ capitanCosta = renombrarAlfajor "capitan del espacio de costa a costa".muyPremiu
 
 
 -- PUNTO 3 
+
+data Cliente = Cliente {
+nombreCliente :: String,
+dineroDisponible :: Float,
+criterios :: Criterio,
+listaDeAlfajores :: [Alfajor]
+}
+
+type Criterio = Alfajor -> Bool 
+
+emi = Cliente {
+nombreCliente = "Emi",
+dineroDisponible = 120,
+criterios = buscaMarca "Capitan del espacio",
+listaDeAlfajores = []
+}
+
+tomi = Cliente {
+nombreCliente = "Tomi",
+dineroDisponible = 100,
+criterios = criterioTomi "premium",
+listaDeAlfajores = []
+}
+
+dante = Cliente {
+nombreCliente = "dante",
+dineroDisponible = 200,
+criterios = [not.esPotable, antiRelleno DulceDeLeche],
+listaDeAlfajores =[]    
+}
+
+juan = Cliente {
+nombreCliente = "juan",
+dineroDisponible = 500,
+criterios = [dulcero, buscaMarca "jorgito", buscaMarca "Premium", antiRelleno Mousse],
+listaDeAlfajores = []
+}
+
+
+buscaMarca :: String -> Alfajor -> Bool 
+buscaMarca unaMarca = isInfixOf unaMarca . nombre  
+
+criterioTomi :: String -> Alfajor -> Bool 
+criterioTomi premium unAlfajor = buscaMarca premium unAlfajor && dulcero unAlfajor
+
+dulcero :: Alfajor -> Bool 
+dulcero (Alfajor _ dulzor _ _ ) = dulzor > 0.15
+
+criterioDante :: Relleno -> Alfajor -> Bool 
+criterioDante unRelleno unAlfajor = (not.esPotable) unAlfajor && antiRelleno unRelleno unAlfajor
+
+antiRelleno :: Relleno -> Alfajor -> Bool 
+antiRelleno unRelleno unAlfajor = elem unRelleno (capasDeRelleno unAlfajor)
+
+criterioJuan :: String -> String -> Alfajor -> Bool
+criterioJuan unaMarca premium unAlfajor = criterioTomi premium unAlfajor && buscaMarca "jorgito" unAlfajor && antiRelleno Mousse unAlfajor
+
+
+-- PUNTO 3 B 
+leGustoOnoLeGusto :: Cliente -> [Alfajor] -> [Alfajor] 
+leGustoOnoLeGusto unCliente = filter (criterios unCliente) 
+
+
+-- PUNTO 3 C
+comprarAlfajor :: Cliente -> Alfajor -> Cliente
+comprarAlfajor unCliente unAlfajor 
+    | precioDelAlfajor unAlfajor > dineroDisponible unCliente = unCliente
+    | otherwise = (agregar unAlfajor . gastar unAlfajor)  unCliente 
+
+
+agregar :: Alfajor-> Cliente -> Cliente
+agregar unAlfajor unCliente = unCliente {listaDeAlfajores = unAlfajor : listaDeAlfajores unCliente} 
+
+gastar :: Alfajor -> Cliente -> Cliente
+gastar unAlfajor unCliente = unCliente{dineroDisponible = dineroDisponible unCliente - precioDelAlfajor unAlfajor}
+
+-- PUNTO 3 D 
+compraMayorista :: [Alfajor] -> Cliente -> Cliente
+compraMayorista alfajores unCliente = foldl comprarAlfajor unCliente ( leGustoOnoLeGusto unCliente alfajores) 
